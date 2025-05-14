@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>優惠回饋計算機</title>
+  <style>
+    body {
+      font-family: "Noto Sans TC", sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #f1f8e9);
+      margin: 0;
+      padding: 40px;
+    }
+    .container {
+      max-width: 720px;
+      margin: auto;
+      background: #ffffff;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #00695c;
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+    label {
+      margin-top: 20px;
+      display: block;
+      font-weight: 600;
+      color: #37474f;
+      font-size: 16px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: 1px solid #b0bec5;
+      box-sizing: border-box;
+      font-size: 15px;
+    }
+    button {
+      width: 100%;
+      margin-top: 30px;
+      background: #00796b;
+      color: white;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      transition: background 0.3s ease;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #004d40;
+    }
+    .result {
+      margin-top: 30px;
+      font-size: 17px;
+      line-height: 1.7;
+      color: #33691e;
+      background: #f1f8e9;
+      padding: 20px;
+      border-radius: 12px;
+    }
+    .result ul {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+    .result p {
+      margin: 10px 0;
+    }
+    .result p:last-child {
+      font-size: 15px;
+      color: #555;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>優惠回饋計算機</h2>
+    <form>
+      <label for="amount">刷卡金額（元）</label>
+      <input type="number" id="amount" placeholder="例如：25000" required />
+
+      <label for="model">KYMCO 車型名稱</label>
+      <input type="text" id="model" placeholder="例如：Many LED 125" required />
+
+      <button type="button" onclick="calculateAll()">計算回饋</button>
+    </form>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const offers = [
+      { bank: "彰銀", threshold: 25000, cashback: 2500, period: "5/1–5/11" },
+      { bank: "合庫", threshold: 32000, cashback: 3200, period: "5/1–5/11" },
+      { bank: "聯邦", threshold: 15000, cashback: 1500, period: "5/1–5/31" },
+      { bank: "台新", threshold: 10000, cashback: 1000, period: "5/1–5/31" },
+      { bank: "元大", threshold: 30000, cashback: 3000, period: "5/1–5/12" },
+    ];
+
+    const voucherModels = [
+      "NICE LED 115",
+      "iMANY 110",
+      "Many LED 125",
+      "Many LED 125 ABS"
+    ];
+
+    function calculateAll() {
+      const amount = parseInt(document.getElementById('amount').value);
+      const modelInput = document.getElementById('model').value.trim();
+      let resultHtml = "";
+      let totalCashback = 0;
+      let explanations = [];
+
+      const eligibleOffers = offers.filter(offer => amount >= offer.threshold);
+      eligibleOffers.sort((a, b) => b.cashback - a.cashback);
+
+      if (eligibleOffers.length > 0) {
+        resultHtml += `<p><strong>符合門檻的刷卡回饋（Top 5）：</strong></p><ul>`;
+        eligibleOffers.slice(0, 5).forEach(offer => {
+          resultHtml += `<li>${offer.bank}：刷卡滿 NT$${offer.threshold} 回饋 NT$${offer.cashback}（活動期間：${offer.period}）</li>`;
+        });
+        resultHtml += `</ul>`;
+      } else {
+        resultHtml += `<p>無符合門檻的刷卡銀行回饋。</p>`;
+      }
+
+      if (eligibleOffers.length > 0) {
+        totalCashback += eligibleOffers[0].cashback;
+        explanations.push(`${eligibleOffers[0].bank} 刷卡金 NT$${eligibleOffers[0].cashback}`);
+      }
+
+      let voucher = 2000;
+      if (voucherModels.find(model => modelInput.includes(model))) {
+        voucher = 3000;
+      }
+      totalCashback += voucher;
+      explanations.push(`KYMCO 指定車型禮券回饋 NT$${voucher}`);
+
+      let tradeInValue = 0;
+      let isElectric = /電動/.test(modelInput);
+      if (isElectric) {
+        tradeInValue = 8800;
+        explanations.push(`電動車汰舊換新補助（最高補助） NT$${tradeInValue}`);
+      } else {
+        tradeInValue = 4300;
+        explanations.push(`非電動車汰舊換新補助（最高補助） NT$${tradeInValue}`);
+      }
+      totalCashback += tradeInValue;
+
+      resultHtml += `<p><strong>回饋組合方式：</strong></p><ul>`;
+      explanations.forEach(item => resultHtml += `<li>${item}</li>`);
+      resultHtml += `</ul>`;
+
+      resultHtml += `<p><strong>預估總回饋金額：</strong> NT$${totalCashback}</p>`;
+      resultHtml += `<p style='margin-top:20px; font-size:15px; color:#555;'>說明：電動車汰舊換新補助為 NT$8800，非電動車汰舊換新補助為 NT$4300，將依車型自動套用。</p>`;
+
+      document.getElementById('result').innerHTML = resultHtml;
+    }
+  </script>
+</body>
+</html>
